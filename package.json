@@ -1,0 +1,21 @@
+{
+  "name": "color-contrast-util",
+  "version": "1.0.0",
+  "description": "Utility to calculate color contrast ratio and WCAG grading",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "color",
+    "contrast",
+    "wcag",
+    "accessibility",
+    "a11y"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chroma-js": "^2.4.2"
+  }
+}
