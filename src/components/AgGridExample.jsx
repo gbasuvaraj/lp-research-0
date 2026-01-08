@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-alpine.css'
@@ -7,7 +7,15 @@ import './AgGridExample.css'
 
 const AgGridExample = () => {
   const gridRef = useRef(null)
-  const [isGrouping, setIsGrouping] = useState(false)
+  const scrollbarRef = useRef(null)
+  const [state, setState] = useState({
+    isGrouping: false,
+    showCustomScrollbar: true,
+    buttonLeft: 0,
+  })
+  const isDragging = useRef(false)
+  const dragStartX = useRef(0)
+  const dragStartLeft = useRef(0)
 
   // Sample data with multiple columns for horizontal scrolling
   const [rowData] = useState([
@@ -59,7 +67,7 @@ const AgGridExample = () => {
     },
     {
       field: 'salary',
-      headerName: isGrouping ? 'Salary (avg)' : 'Salary',
+      headerName: state.isGrouping ? 'Salary (avg)' : 'Salary',
       sortable: true,
       filter: 'agNumberColumnFilter',
       valueFormatter: (params) => params.value ? `$${Math.round(params.value).toLocaleString()}` : '',
@@ -68,7 +76,7 @@ const AgGridExample = () => {
     },
     {
       field: 'bonus',
-      headerName: isGrouping ? 'Bonus (sum)' : 'Bonus',
+      headerName: state.isGrouping ? 'Bonus (sum)' : 'Bonus',
       sortable: true,
       filter: 'agNumberColumnFilter',
       valueFormatter: (params) => params.value ? `$${Math.round(params.value).toLocaleString()}` : '',
@@ -77,7 +85,7 @@ const AgGridExample = () => {
     },
     {
       field: 'experience',
-      headerName: isGrouping ? 'Exp yrs (avg)' : 'Exp (yrs)',
+      headerName: state.isGrouping ? 'Exp yrs (avg)' : 'Exp (yrs)',
       sortable: true,
       filter: 'agNumberColumnFilter',
       valueFormatter: (params) => {
@@ -104,7 +112,7 @@ const AgGridExample = () => {
     },
     {
       field: 'rating',
-      headerName: isGrouping ? 'Rating (avg)' : 'Rating',
+      headerName: state.isGrouping ? 'Rating (avg)' : 'Rating',
       sortable: true,
       filter: 'agNumberColumnFilter',
       valueFormatter: (params) => {
@@ -117,13 +125,13 @@ const AgGridExample = () => {
     },
     {
       field: 'projects',
-      headerName: isGrouping ? 'Projects (sum)' : 'Projects',
+      headerName: state.isGrouping ? 'Projects (sum)' : 'Projects',
       sortable: true,
       filter: 'agNumberColumnFilter',
       aggFunc: 'sum',
       width: 130,
     },
-  ], [isGrouping])
+  ], [state.isGrouping])
 
   // External grouping controls
   const groupByDepartment = useCallback(() => {
@@ -144,7 +152,7 @@ const AgGridExample = () => {
 
   const onColumnRowGroupChanged = useCallback((event) => {
     const rowGroupCols = event.api.getRowGroupColumns()
-    setIsGrouping(rowGroupCols.length > 0)
+    setState(prev => ({ ...prev, isGrouping: rowGroupCols.length > 0 }))
   }, [])
 
   // External scroll controls
@@ -161,6 +169,67 @@ const AgGridExample = () => {
       gridBody.scrollBy({ left: 200, behavior: 'smooth' })
     }
   }, [])
+
+  // Scrollbar drag handlers
+  const scrollGridTo = useCallback((buttonPosition) => {
+    const gridBody = document.querySelector('.ag-body-horizontal-scroll-viewport')
+    if (!gridBody || !scrollbarRef.current) return
+
+    const trackWidth = scrollbarRef.current.clientWidth - 60 // 60 = button width
+    const scrollRatio = buttonPosition / trackWidth
+    const maxScroll = gridBody.scrollWidth - gridBody.clientWidth
+    gridBody.scrollLeft = scrollRatio * maxScroll
+  }, [])
+
+  const handleMouseDown = useCallback((e) => {
+    isDragging.current = true
+    dragStartX.current = e.clientX
+    dragStartLeft.current = state.buttonLeft
+    e.preventDefault()
+  }, [state.buttonLeft])
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging.current || !scrollbarRef.current) return
+
+    const deltaX = e.clientX - dragStartX.current
+    const trackWidth = scrollbarRef.current.clientWidth - 60
+    const newLeft = Math.max(0, Math.min(trackWidth, dragStartLeft.current + deltaX))
+
+    setState(prev => ({ ...prev, buttonLeft: newLeft }))
+    scrollGridTo(newLeft)
+  }, [scrollGridTo])
+
+  const handleMouseUp = useCallback(() => {
+    isDragging.current = false
+  }, [])
+
+  const handleBodyScroll = useCallback((e) => {
+    if (isDragging.current || !scrollbarRef.current) return
+    if (e.direction !== 'horizontal') return
+
+    const { left } = e
+    const gridBody = document.querySelector('.ag-body-horizontal-scroll-viewport')
+    if (!gridBody) return
+
+    const { scrollWidth, clientWidth } = gridBody
+    const maxScroll = scrollWidth - clientWidth
+    if (maxScroll <= 0) return
+
+    const scrollRatio = left / maxScroll
+    const trackWidth = scrollbarRef.current.clientWidth - 60
+    const newButtonLeft = scrollRatio * trackWidth
+
+    setState(prev => ({ ...prev, buttonLeft: newButtonLeft }))
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [handleMouseMove, handleMouseUp])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
@@ -190,7 +259,7 @@ const AgGridExample = () => {
         <button onClick={clearGrouping}>Clear Grouping</button>
       </div>
 
-      {isGrouping && (
+      {state.isGrouping && (
         <div className="aggregation-info">
           <strong>Aggregation active:</strong> Columns marked with <span className="agg-tag avg">(avg)</span> show the <em>average</em> value.
           Columns marked with <span className="agg-tag sum">(sum)</span> show the <em>total</em> value.
@@ -201,6 +270,14 @@ const AgGridExample = () => {
         <span>Scroll:</span>
         <button onClick={scrollLeft}>&larr; Scroll Left</button>
         <button onClick={scrollRight}>Scroll Right &rarr;</button>
+        <label style={{ marginLeft: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={state.showCustomScrollbar}
+            onChange={(e) => setState(prev => ({ ...prev, showCustomScrollbar: e.target.checked }))}
+          />
+          Custom Scrollbar
+        </label>
       </div>
 
       <div className="ag-theme-alpine" style={{ height: 600, width: '100%' }}>
@@ -215,8 +292,19 @@ const AgGridExample = () => {
           suppressDragLeaveHidesColumns={true}
           animateRows={true}
           onColumnRowGroupChanged={onColumnRowGroupChanged}
+          onBodyScroll={handleBodyScroll}
         />
       </div>
+
+      {state.showCustomScrollbar && (
+        <div className="simple-scrollbar" ref={scrollbarRef}>
+          <div
+            className="simple-scrollbar-button"
+            style={{ left: state.buttonLeft }}
+            onMouseDown={handleMouseDown}
+          />
+        </div>
+      )}
     </div>
   )
 }
