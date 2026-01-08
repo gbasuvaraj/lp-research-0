@@ -2,20 +2,38 @@
   "name": "color-contrast-util",
   "version": "1.0.0",
   "description": "Utility to calculate color contrast ratio and WCAG grading",
-  "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node test.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node src/test.js"
   },
   "keywords": [
     "color",
     "contrast",
     "wcag",
     "accessibility",
-    "a11y"
+    "a11y",
+    "react"
   ],
   "license": "MIT",
   "dependencies": {
-    "chroma-js": "^2.4.2"
+    "ag-grid-community": "^31.0.3",
+    "ag-grid-enterprise": "^31.3.4",
+    "ag-grid-react": "^31.0.3",
+    "chroma-js": "^2.4.2",
+    "d3-interpolate": "^3.0.1",
+    "d3-scale": "^4.0.2",
+    "react": "^18.2.0",
+    "react-color": "^2.19.3",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.12.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
   }
 }

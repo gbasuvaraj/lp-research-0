@@ -30,3 +30,4 @@ export function getColorAccessibility(foreground, background, fontSize = 16, bol
 }
 
 export default getColorAccessibility
+
