@@ -10,6 +10,7 @@ const SCROLLBAR_BUTTON_WIDTH = 120
 // Custom Group Inner Renderers (used with innerRenderer to preserve expand/collapse)
 const DefaultInnerRenderer = (props) => {
   const { node, value } = props
+  if (!node.group) return null
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       <span>{value}</span>
@@ -20,6 +21,7 @@ const DefaultInnerRenderer = (props) => {
 
 const BadgeInnerRenderer = (props) => {
   const { node, value } = props
+  if (!node.group) return null
   const colors = {
     Engineering: { bg: '#e3f2fd', text: '#1565c0' },
     Marketing: { bg: '#fce4ec', text: '#c2185b' },
@@ -53,6 +55,7 @@ const BadgeInnerRenderer = (props) => {
 
 const ProgressInnerRenderer = (props) => {
   const { node, value } = props
+  if (!node.group) return null
   // Calculate aggregate for progress visualization
   const allLeafChildren = node.allLeafChildren || []
   const totalProjects = allLeafChildren.reduce((sum, child) => sum + (child.data?.projects || 0), 0)
@@ -84,6 +87,7 @@ const ProgressInnerRenderer = (props) => {
 
 const IconInnerRenderer = (props) => {
   const { node, value } = props
+  if (!node.group) return null
   const icons = {
     Engineering: '⚙️',
     Marketing: '📢',
