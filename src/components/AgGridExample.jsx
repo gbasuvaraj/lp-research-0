@@ -7,6 +7,108 @@ import './AgGridExample.css'
 
 const SCROLLBAR_BUTTON_WIDTH = 120
 
+// Custom Group Inner Renderers (used with innerRenderer to preserve expand/collapse)
+const DefaultInnerRenderer = (props) => {
+  const { node, value } = props
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <span>{value}</span>
+      <span style={{ color: '#666', fontSize: '0.85em' }}>({node.allChildrenCount})</span>
+    </span>
+  )
+}
+
+const BadgeInnerRenderer = (props) => {
+  const { node, value } = props
+  const colors = {
+    Engineering: { bg: '#e3f2fd', text: '#1565c0' },
+    Marketing: { bg: '#fce4ec', text: '#c2185b' },
+    Sales: { bg: '#e8f5e9', text: '#2e7d32' },
+    HR: { bg: '#fff3e0', text: '#ef6c00' },
+  }
+  const color = colors[value] || { bg: '#f5f5f5', text: '#333' }
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{
+        background: color.bg,
+        color: color.text,
+        padding: '2px 10px',
+        borderRadius: '12px',
+        fontWeight: 500,
+      }}>
+        {value}
+      </span>
+      <span style={{
+        background: '#333',
+        color: '#fff',
+        padding: '2px 8px',
+        borderRadius: '10px',
+        fontSize: '0.75em',
+      }}>
+        {node.allChildrenCount}
+      </span>
+    </span>
+  )
+}
+
+const ProgressInnerRenderer = (props) => {
+  const { node, value } = props
+  // Calculate aggregate for progress visualization
+  const allLeafChildren = node.allLeafChildren || []
+  const totalProjects = allLeafChildren.reduce((sum, child) => sum + (child.data?.projects || 0), 0)
+  const maxProjects = 100
+  const progress = Math.min((totalProjects / maxProjects) * 100, 100)
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+      <span style={{ minWidth: '80px' }}>{value}</span>
+      <span style={{
+        flex: 1,
+        maxWidth: '120px',
+        height: '8px',
+        background: '#e0e0e0',
+        borderRadius: '4px',
+        overflow: 'hidden',
+      }}>
+        <span style={{
+          display: 'block',
+          width: `${progress}%`,
+          height: '100%',
+          background: 'linear-gradient(90deg, #4caf50, #8bc34a)',
+          borderRadius: '4px',
+        }} />
+      </span>
+      <span style={{ fontSize: '0.8em', color: '#666' }}>{totalProjects} projects</span>
+    </span>
+  )
+}
+
+const IconInnerRenderer = (props) => {
+  const { node, value } = props
+  const icons = {
+    Engineering: '⚙️',
+    Marketing: '📢',
+    Sales: '💰',
+    HR: '👥',
+    Frontend: '🎨',
+    Backend: '🔧',
+    DevOps: '🚀',
+    Digital: '📱',
+    Content: '✍️',
+    Enterprise: '🏢',
+    SMB: '🏪',
+    Recruitment: '🔍',
+    Operations: '📋',
+  }
+  const icon = icons[value] || '📁'
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <span style={{ fontSize: '1.2em' }}>{icon}</span>
+      <span style={{ fontWeight: 500 }}>{value}</span>
+      <span style={{ color: '#888', fontSize: '0.85em' }}>• {node.allChildrenCount} items</span>
+    </span>
+  )
+}
+
 const AgGridExample = () => {
   const gridRef = useRef(null)
   const scrollbarRef = useRef(null)
@@ -14,6 +116,7 @@ const AgGridExample = () => {
     isGrouping: false,
     showCustomScrollbar: true,
     buttonLeft: 0,
+    groupRendererStyle: 'default', // 'default' | 'badge' | 'progress' | 'icon'
   })
   const isDragging = useRef(false)
   const dragStartX = useRef(0)
@@ -333,13 +436,21 @@ const AgGridExample = () => {
     sortable: true,
   }), [])
 
+  const groupInnerRenderers = useMemo(() => ({
+    default: DefaultInnerRenderer,
+    badge: BadgeInnerRenderer,
+    progress: ProgressInnerRenderer,
+    icon: IconInnerRenderer,
+  }), [])
+
   const autoGroupColumnDef = useMemo(() => ({
     headerName: 'Group',
-    minWidth: 200,
+    minWidth: state.groupRendererStyle === 'progress' ? 320 : 220,
     cellRendererParams: {
-      suppressCount: false,
+      suppressCount: true, // We handle count display in custom renderers
+      innerRenderer: groupInnerRenderers[state.groupRendererStyle],
     },
-  }), [])
+  }), [state.groupRendererStyle, groupInnerRenderers])
 
   return (
     <div className="ag-grid-example">
@@ -354,6 +465,26 @@ const AgGridExample = () => {
         <button onClick={groupByTeam}>Group by Team</button>
         <button onClick={groupByLocation}>Group by Location</button>
         <button onClick={clearGrouping}>Clear Grouping</button>
+      </div>
+
+      <div className="external-controls">
+        <span>Group Cell Style:</span>
+        <select
+          value={state.groupRendererStyle}
+          onChange={(e) => setState(prev => ({ ...prev, groupRendererStyle: e.target.value }))}
+          style={{ padding: '0.25rem 0.5rem', borderRadius: '4px' }}
+        >
+          <option value="default">Default</option>
+          <option value="badge">Colored Badges</option>
+          <option value="progress">Progress Bar</option>
+          <option value="icon">Icons</option>
+        </select>
+        <span style={{ fontSize: '0.85em', color: '#666', marginLeft: '0.5rem' }}>
+          {state.groupRendererStyle === 'default' && '- Simple text with count'}
+          {state.groupRendererStyle === 'badge' && '- Color-coded badges per department'}
+          {state.groupRendererStyle === 'progress' && '- Shows aggregate projects as progress'}
+          {state.groupRendererStyle === 'icon' && '- Department/team icons'}
+        </span>
       </div>
 
       {state.isGrouping && (
@@ -379,6 +510,7 @@ const AgGridExample = () => {
 
       <div className="ag-theme-alpine" style={{ height: 600, width: '100%' }}>
         <AgGridReact
+          key={state.groupRendererStyle}
           ref={gridRef}
           rowData={rowData}
           columnDefs={columnDefs}
