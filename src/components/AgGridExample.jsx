@@ -460,31 +460,31 @@ const AgGridExample = () => {
       </div>
 
       <div className="external-controls">
-        <span>Grouping:</span>
-        <button onClick={groupByDepartment}>Group by Department</button>
-        <button onClick={groupByTeam}>Group by Team</button>
-        <button onClick={groupByLocation}>Group by Location</button>
-        <button onClick={clearGrouping}>Clear Grouping</button>
-      </div>
-
-      <div className="external-controls">
         <span>Group Cell Style:</span>
         <select
+          className="style-select"
           value={state.groupRendererStyle}
           onChange={(e) => setState(prev => ({ ...prev, groupRendererStyle: e.target.value }))}
-          style={{ padding: '0.25rem 0.5rem', borderRadius: '4px' }}
         >
           <option value="default">Default</option>
           <option value="badge">Colored Badges</option>
           <option value="progress">Progress Bar</option>
           <option value="icon">Icons</option>
         </select>
-        <span style={{ fontSize: '0.85em', color: '#666', marginLeft: '0.5rem' }}>
+        <span className="style-hint">
           {state.groupRendererStyle === 'default' && '- Simple text with count'}
           {state.groupRendererStyle === 'badge' && '- Color-coded badges per department'}
           {state.groupRendererStyle === 'progress' && '- Shows aggregate projects as progress'}
           {state.groupRendererStyle === 'icon' && '- Department/team icons'}
         </span>
+      </div>
+
+      <div className="external-controls">
+        <span>Grouping:</span>
+        <button onClick={groupByDepartment}>Group by Department</button>
+        <button onClick={groupByTeam}>Group by Team</button>
+        <button onClick={groupByLocation}>Group by Location</button>
+        <button onClick={clearGrouping}>Clear Grouping</button>
       </div>
 
       {state.isGrouping && (
