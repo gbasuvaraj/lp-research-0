@@ -54,6 +54,7 @@ const D3ColorExplorer = () => {
   const [interpolation, setInterpolation] = useState('RGB')
   const [backgroundColor, setBackgroundColor] = useState('#ffffff')
   const [backgroundColorInput, setBackgroundColorInput] = useState('#ffffff')
+  const [sampleText, setSampleText] = useState('Sample')
 
   const applyPreset = (paletteName, colorCount) => {
     const colors = presetPalettes[paletteName][colorCount]
@@ -229,6 +230,18 @@ const D3ColorExplorer = () => {
               </div>
             </label>
           </div>
+          <div className="settings-row">
+            <label>
+              Sample Text:
+              <input
+                type="text"
+                value={sampleText}
+                onChange={(e) => setSampleText(e.target.value)}
+                placeholder="Sample"
+                className="sample-text-input"
+              />
+            </label>
+          </div>
         </div>
       </div>
 
@@ -274,7 +287,7 @@ const D3ColorExplorer = () => {
                   className="swatch-sample"
                   style={{ backgroundColor: backgroundColor, color: item.color }}
                 >
-                  Sample
+                  {sampleText || 'Sample'}
                 </div>
                 <span className="swatch-index">{index + 1}</span>
                 <span className="swatch-value">{item.color}</span>
