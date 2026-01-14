@@ -318,6 +318,22 @@ const AgGridExample = () => {
   const onGridReady = useCallback((params) => {
     // Apply initial grouping after grid is ready to ensure footers render correctly
     params.api.setRowGroupColumns(['department', 'team'])
+
+    // Re-attach scroll listener after grid is ready
+    const viewport = document.querySelector('.ag-center-cols-viewport')
+    if (viewport && scrollbarRef.current) {
+      const updateScrollbarFromViewport = () => {
+        if (isDragging.current || !scrollbarRef.current) return
+        const { scrollLeft, scrollWidth, clientWidth } = viewport
+        const maxScroll = scrollWidth - clientWidth
+        if (maxScroll <= 0) return
+        const scrollRatio = scrollLeft / maxScroll
+        const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
+        const newButtonLeft = scrollRatio * trackWidth
+        setState(prev => ({ ...prev, buttonLeft: newButtonLeft }))
+      }
+      viewport.addEventListener('scroll', updateScrollbarFromViewport)
+    }
   }, [])
 
   // External scroll controls
@@ -489,7 +505,7 @@ const AgGridExample = () => {
     } else {
       console.warn('[useEffect:scroll] Viewport not found, scroll listener not attached')
     }
-  }, [state.showCustomScrollbar])
+  }, [state.showCustomScrollbar, state.groupRendererStyle])
 
   const defaultColDef = useMemo(() => ({
     resizable: true,
