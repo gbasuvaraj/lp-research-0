@@ -315,6 +315,11 @@ const AgGridExample = () => {
     }))
   }, [])
 
+  const onGridReady = useCallback((params) => {
+    // Apply initial grouping after grid is ready to ensure footers render correctly
+    params.api.setRowGroupColumns(['department', 'team'])
+  }, [])
+
   // External scroll controls
   const scrollLeft = useCallback(() => {
     console.log('[scrollLeft] Button clicked')
@@ -595,13 +600,9 @@ const AgGridExample = () => {
           suppressDragLeaveHidesColumns={true}
           suppressHorizontalScroll={state.showCustomScrollbar}
           animateRows={true}
+          onGridReady={onGridReady}
           onColumnRowGroupChanged={onColumnRowGroupChanged}
           onBodyScroll={handleBodyScroll}
-          initialState={{
-            rowGroup: {
-              groupColIds: ['department', 'team'],
-            },
-          }}
         />
       </div>
 
