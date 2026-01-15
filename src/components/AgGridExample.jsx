@@ -318,112 +318,143 @@ const AgGridExample = () => {
   const onGridReady = useCallback((params) => {
     // Apply initial grouping after grid is ready to ensure footers render correctly
     params.api.setRowGroupColumns(['department', 'team'])
-
-    // Re-attach scroll listener after grid is ready
-    const viewport = document.querySelector('.ag-center-cols-viewport')
-    if (viewport && scrollbarRef.current) {
-      const updateScrollbarFromViewport = () => {
-        if (isDragging.current || !scrollbarRef.current) return
-        const { scrollLeft, scrollWidth, clientWidth } = viewport
-        const maxScroll = scrollWidth - clientWidth
-        if (maxScroll <= 0) return
-        const scrollRatio = scrollLeft / maxScroll
-        const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
-        const newButtonLeft = scrollRatio * trackWidth
-        setState(prev => ({ ...prev, buttonLeft: newButtonLeft }))
-      }
-      viewport.addEventListener('scroll', updateScrollbarFromViewport)
-    }
   }, [])
 
   // External scroll controls
   const scrollLeft = useCallback(() => {
-    console.log('[scrollLeft] Button clicked')
+    console.info('[scrollLeft] Button clicked')
     const viewport = document.querySelector('.ag-center-cols-viewport')
     if (!viewport) {
       console.warn('[scrollLeft] Viewport not found')
       return
+    } else {
+      console.debug('[scrollLeft] Scrolling left by 200px, current scrollLeft:', viewport.scrollLeft)
     }
-    console.log('[scrollLeft] Scrolling left by 200px, current scrollLeft:', viewport.scrollLeft)
     viewport.scrollBy({ left: -200, behavior: 'smooth' })
   }, [])
 
   const scrollRight = useCallback(() => {
-    console.log('[scrollRight] Button clicked')
+    console.info('[scrollRight] Button clicked')
     const viewport = document.querySelector('.ag-center-cols-viewport')
     if (!viewport) {
       console.warn('[scrollRight] Viewport not found')
       return
+    } else {
+      console.debug('[scrollRight] Scrolling right by 200px, current scrollLeft:', viewport.scrollLeft)
     }
-    console.log('[scrollRight] Scrolling right by 200px, current scrollLeft:', viewport.scrollLeft)
     viewport.scrollBy({ left: 200, behavior: 'smooth' })
   }, [])
 
   // Scrollbar drag handlers
   const scrollGridTo = useCallback((buttonPosition) => {
-    console.log('[scrollGridTo] Called with buttonPosition:', buttonPosition)
+    console.debug('[scrollGridTo] Called with buttonPosition:', buttonPosition)
     const viewport = document.querySelector('.ag-center-cols-viewport')
     if (!viewport) {
       console.warn('[scrollGridTo] Viewport not found')
       return
+    } else {
+      console.debug('[scrollGridTo] Viewport found')
     }
     if (!scrollbarRef.current) {
       console.warn('[scrollGridTo] Scrollbar ref not available')
       return
+    } else {
+      console.debug('[scrollGridTo] Scrollbar ref available')
     }
 
     const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
     const scrollRatio = buttonPosition / trackWidth
     const maxScroll = viewport.scrollWidth - viewport.clientWidth
     const newScrollLeft = scrollRatio * maxScroll
-    console.log('[scrollGridTo] trackWidth:', trackWidth, 'scrollRatio:', scrollRatio, 'maxScroll:', maxScroll, 'newScrollLeft:', newScrollLeft)
+    console.debug('[scrollGridTo] trackWidth:', trackWidth, 'scrollRatio:', scrollRatio, 'maxScroll:', maxScroll, 'newScrollLeft:', newScrollLeft)
     viewport.scrollLeft = newScrollLeft
   }, [])
 
   const handleMouseDown = useCallback((e) => {
-    console.log('[handleMouseDown] Drag started at clientX:', e.clientX, 'buttonLeft:', state.buttonLeft)
+    console.info('[handleMouseDown] Drag started at clientX:', e.clientX, 'buttonLeft:', state.buttonLeft)
     isDragging.current = true
     dragStartX.current = e.clientX
     dragStartLeft.current = state.buttonLeft
     e.preventDefault()
   }, [state.buttonLeft])
 
+  const handleTrackClick = useCallback((e) => {
+    // Ignore if clicking on the button itself
+    if (e.target.classList.contains('simple-scrollbar-button')) {
+      console.debug('[handleTrackClick] Clicked on button, ignoring')
+      return
+    } else {
+      console.info('[handleTrackClick] Clicked on track')
+    }
+
+    if (!scrollbarRef.current) {
+      console.warn('[handleTrackClick] Scrollbar ref not available')
+      return
+    } else {
+      console.debug('[handleTrackClick] Scrollbar ref available')
+    }
+
+    const rect = scrollbarRef.current.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
+    // Center the button on the click position
+    const newLeft = Math.max(0, Math.min(trackWidth, clickX - SCROLLBAR_BUTTON_WIDTH / 2))
+
+    console.debug('[handleTrackClick] clickX:', clickX, 'trackWidth:', trackWidth, 'newLeft:', newLeft)
+    setState(prev => ({ ...prev, buttonLeft: newLeft }))
+    scrollGridTo(newLeft)
+  }, [scrollGridTo])
+
   const handleMouseMove = useCallback((e) => {
-    if (!isDragging.current) return
+    if (!isDragging.current) {
+      return
+    } else {
+      console.debug('[handleMouseMove] Dragging in progress')
+    }
     if (!scrollbarRef.current) {
       console.warn('[handleMouseMove] Scrollbar ref not available')
       return
+    } else {
+      console.debug('[handleMouseMove] Scrollbar ref available')
     }
 
     const deltaX = e.clientX - dragStartX.current
     const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
     const newLeft = Math.max(0, Math.min(trackWidth, dragStartLeft.current + deltaX))
 
-    console.log('[handleMouseMove] deltaX:', deltaX, 'trackWidth:', trackWidth, 'newLeft:', newLeft)
+    console.debug('[handleMouseMove] deltaX:', deltaX, 'trackWidth:', trackWidth, 'newLeft:', newLeft)
     setState(prev => ({ ...prev, buttonLeft: newLeft }))
     scrollGridTo(newLeft)
   }, [scrollGridTo])
 
   const handleMouseUp = useCallback(() => {
     if (isDragging.current) {
-      console.log('[handleMouseUp] Drag ended')
+      console.info('[handleMouseUp] Drag ended')
+    } else {
+      console.debug('[handleMouseUp] No drag was in progress')
     }
     isDragging.current = false
   }, [])
 
   const handleBodyScroll = useCallback((e) => {
-    console.log('[handleBodyScroll] ag-grid onBodyScroll fired, direction:', e.direction)
+    console.debug('[handleBodyScroll] ag-grid onBodyScroll fired, direction:', e.direction)
     if (isDragging.current) {
-      console.log('[handleBodyScroll] Skipped - currently dragging')
+      console.debug('[handleBodyScroll] Skipped - currently dragging')
       return
+    } else {
+      console.debug('[handleBodyScroll] Not dragging, proceeding')
     }
     if (!scrollbarRef.current) {
       console.warn('[handleBodyScroll] Scrollbar ref not available')
       return
+    } else {
+      console.debug('[handleBodyScroll] Scrollbar ref available')
     }
     if (e.direction !== 'horizontal') {
-      console.log('[handleBodyScroll] Skipped - not horizontal scroll')
+      console.debug('[handleBodyScroll] Skipped - not horizontal scroll')
       return
+    } else {
+      console.debug('[handleBodyScroll] Horizontal scroll detected')
     }
 
     const { left } = e
@@ -431,29 +462,33 @@ const AgGridExample = () => {
     if (!gridBody) {
       console.warn('[handleBodyScroll] Grid body not found')
       return
+    } else {
+      console.debug('[handleBodyScroll] Grid body found')
     }
 
     const { scrollWidth, clientWidth } = gridBody
     const maxScroll = scrollWidth - clientWidth
     if (maxScroll <= 0) {
-      console.log('[handleBodyScroll] Skipped - maxScroll <= 0')
+      console.debug('[handleBodyScroll] Skipped - maxScroll <= 0')
       return
+    } else {
+      console.debug('[handleBodyScroll] maxScroll:', maxScroll)
     }
 
     const scrollRatio = left / maxScroll
     const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
     const newButtonLeft = scrollRatio * trackWidth
 
-    console.log('[handleBodyScroll] left:', left, 'maxScroll:', maxScroll, 'scrollRatio:', scrollRatio, 'newButtonLeft:', newButtonLeft)
+    console.debug('[handleBodyScroll] left:', left, 'scrollRatio:', scrollRatio, 'newButtonLeft:', newButtonLeft)
     setState(prev => ({ ...prev, buttonLeft: newButtonLeft }))
   }, [])
 
   useEffect(() => {
-    console.log('[useEffect:mouse] Setting up mouse event listeners')
+    console.info('[useEffect:mouse] Setting up mouse event listeners')
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
     return () => {
-      console.log('[useEffect:mouse] Cleaning up mouse event listeners')
+      console.info('[useEffect:mouse] Cleaning up mouse event listeners')
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
@@ -461,49 +496,65 @@ const AgGridExample = () => {
 
   // DOM-level scroll listener for touchpad/wheel scrolling
   useEffect(() => {
-    console.log('[useEffect:scroll] Setting up DOM scroll listener, showCustomScrollbar:', state.showCustomScrollbar)
+    console.info('[useEffect:scroll] Setting up DOM scroll listener, showCustomScrollbar:', state.showCustomScrollbar, 'groupRendererStyle:', state.groupRendererStyle)
 
     const updateScrollbarFromViewport = () => {
       if (isDragging.current) {
-        console.log('[updateScrollbarFromViewport] Skipped - currently dragging')
+        console.debug('[updateScrollbarFromViewport] Skipped - currently dragging')
         return
+      } else {
+        console.debug('[updateScrollbarFromViewport] Not dragging, proceeding')
       }
       if (!scrollbarRef.current) {
         console.warn('[updateScrollbarFromViewport] Scrollbar ref not available')
         return
+      } else {
+        console.debug('[updateScrollbarFromViewport] Scrollbar ref available')
       }
 
       const viewport = document.querySelector('.ag-center-cols-viewport')
       if (!viewport) {
         console.warn('[updateScrollbarFromViewport] Viewport not found')
         return
+      } else {
+        console.debug('[updateScrollbarFromViewport] Viewport found')
       }
 
       const { scrollLeft, scrollWidth, clientWidth } = viewport
       const maxScroll = scrollWidth - clientWidth
       if (maxScroll <= 0) {
-        console.log('[updateScrollbarFromViewport] Skipped - maxScroll <= 0')
+        console.debug('[updateScrollbarFromViewport] Skipped - maxScroll <= 0')
         return
+      } else {
+        console.debug('[updateScrollbarFromViewport] maxScroll:', maxScroll)
       }
 
       const scrollRatio = scrollLeft / maxScroll
       const trackWidth = scrollbarRef.current.clientWidth - SCROLLBAR_BUTTON_WIDTH
       const newButtonLeft = scrollRatio * trackWidth
 
-      console.log('[updateScrollbarFromViewport] scrollLeft:', scrollLeft, 'maxScroll:', maxScroll, 'scrollRatio:', scrollRatio, 'newButtonLeft:', newButtonLeft)
+      console.debug('[updateScrollbarFromViewport] scrollLeft:', scrollLeft, 'scrollRatio:', scrollRatio, 'newButtonLeft:', newButtonLeft)
       setState(prev => ({ ...prev, buttonLeft: newButtonLeft }))
     }
 
-    const viewport = document.querySelector('.ag-center-cols-viewport')
-    if (viewport) {
-      console.log('[useEffect:scroll] Viewport found, attaching scroll listener')
-      viewport.addEventListener('scroll', updateScrollbarFromViewport)
-      return () => {
-        console.log('[useEffect:scroll] Cleaning up scroll listener')
+    // Delay to ensure grid DOM is ready
+    const timeoutId = setTimeout(() => {
+      const viewport = document.querySelector('.ag-center-cols-viewport')
+      if (viewport) {
+        console.info('[useEffect:scroll] Viewport found after delay, attaching scroll listener')
+        viewport.addEventListener('scroll', updateScrollbarFromViewport)
+      } else {
+        console.warn('[useEffect:scroll] Viewport not found after delay, scroll listener not attached')
+      }
+    }, 100)
+
+    return () => {
+      console.info('[useEffect:scroll] Cleaning up scroll listener')
+      clearTimeout(timeoutId)
+      const viewport = document.querySelector('.ag-center-cols-viewport')
+      if (viewport) {
         viewport.removeEventListener('scroll', updateScrollbarFromViewport)
       }
-    } else {
-      console.warn('[useEffect:scroll] Viewport not found, scroll listener not attached')
     }
   }, [state.showCustomScrollbar, state.groupRendererStyle])
 
@@ -623,7 +674,7 @@ const AgGridExample = () => {
       </div>
 
       {state.showCustomScrollbar && (
-        <div className="simple-scrollbar" ref={scrollbarRef}>
+        <div className="simple-scrollbar" ref={scrollbarRef} onClick={handleTrackClick}>
           <div
             className="simple-scrollbar-button"
             style={{ left: state.buttonLeft, width: SCROLLBAR_BUTTON_WIDTH }}
