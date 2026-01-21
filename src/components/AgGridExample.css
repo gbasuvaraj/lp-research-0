@@ -163,14 +163,55 @@
   color: #065f46;
 }
 
+/* Grid Container for sticky scrollbar */
+.grid-container {
+  position: relative;
+}
+
+/* Grid scroll buttons - non-intrusive overlay */
+.grid-scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 32px;
+  height: 64px;
+  border: none;
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-scroll-btn:hover {
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.grid-scroll-left {
+  left: 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.grid-scroll-right {
+  right: 0;
+  border-radius: 6px 0 0 6px;
+}
+
 /* Simple Custom Scrollbar */
 .simple-scrollbar {
-  position: relative;
+  position: sticky;
+  bottom: 0;
   width: 100%;
   height: 20px;
   background: #e5e7eb;
   border-radius: 10px;
   margin-top: 12px;
+  z-index: 10;
 }
 
 .simple-scrollbar-button {
@@ -189,5 +230,43 @@
 .simple-scrollbar-button:active {
   cursor: grabbing;
   background: #1d4ed8;
+}
+
+/* Dummy content for testing sticky behavior */
+.dummy-content {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dummy-content h3 {
+  color: #6b7280;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dummy-content > p {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.dummy-block {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.dummy-block h4 {
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.dummy-block p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 

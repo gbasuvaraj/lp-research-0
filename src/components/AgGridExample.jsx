@@ -639,10 +639,7 @@ const AgGridExample = () => {
       )}
 
       <div className="external-controls">
-        <span>Scroll:</span>
-        <button onClick={scrollLeft}>&larr; Scroll Left</button>
-        <button onClick={scrollRight}>Scroll Right &rarr;</button>
-        <label style={{ marginLeft: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
           <input
             type="checkbox"
             checked={state.showCustomScrollbar}
@@ -652,36 +649,55 @@ const AgGridExample = () => {
         </label>
       </div>
 
-      <div className="ag-theme-alpine" style={{ height: 600, width: '100%' }}>
-        <AgGridReact
-          key={state.groupRendererStyle}
-          ref={gridRef}
-          rowData={rowData}
-          columnDefs={columnDefs}
-          defaultColDef={defaultColDef}
-          autoGroupColumnDef={autoGroupColumnDef}
-          rowGroupPanelShow="always"
-          groupDefaultExpanded={-1}
-          groupIncludeFooter={true}
-          groupIncludeTotalFooter={true}
-          suppressDragLeaveHidesColumns={true}
-          suppressHorizontalScroll={state.showCustomScrollbar}
-          animateRows={true}
-          onGridReady={onGridReady}
-          onColumnRowGroupChanged={onColumnRowGroupChanged}
-          onBodyScroll={handleBodyScroll}
-        />
-      </div>
-
-      {state.showCustomScrollbar && (
-        <div className="simple-scrollbar" ref={scrollbarRef} onClick={handleTrackClick}>
-          <div
-            className="simple-scrollbar-button"
-            style={{ left: state.buttonLeft, width: SCROLLBAR_BUTTON_WIDTH }}
-            onMouseDown={handleMouseDown}
+      <div className="grid-container">
+        <button className="grid-scroll-btn grid-scroll-left" onClick={scrollLeft} aria-label="Scroll left">
+          &#8249;
+        </button>
+        <button className="grid-scroll-btn grid-scroll-right" onClick={scrollRight} aria-label="Scroll right">
+          &#8250;
+        </button>
+        <div className="ag-theme-alpine" style={{ height: 600, width: '100%' }}>
+          <AgGridReact
+            key={state.groupRendererStyle}
+            ref={gridRef}
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            autoGroupColumnDef={autoGroupColumnDef}
+            rowGroupPanelShow="always"
+            groupDefaultExpanded={-1}
+            groupIncludeFooter={true}
+            groupIncludeTotalFooter={true}
+            suppressDragLeaveHidesColumns={true}
+            suppressHorizontalScroll={state.showCustomScrollbar}
+            animateRows={true}
+            onGridReady={onGridReady}
+            onColumnRowGroupChanged={onColumnRowGroupChanged}
+            onBodyScroll={handleBodyScroll}
           />
         </div>
-      )}
+
+        {state.showCustomScrollbar && (
+          <div className="simple-scrollbar" ref={scrollbarRef} onClick={handleTrackClick}>
+            <div
+              className="simple-scrollbar-button"
+              style={{ left: state.buttonLeft, width: SCROLLBAR_BUTTON_WIDTH }}
+              onMouseDown={handleMouseDown}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="dummy-content">
+        <h3>Additional Content (for testing sticky scrollbar)</h3>
+        <p>Scroll down to see the scrollbar stick to the bottom of the viewport, then release when you scroll past the grid.</p>
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="dummy-block">
+            <h4>Section {i + 1}</h4>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
