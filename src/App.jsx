@@ -2,6 +2,7 @@ import { Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import AgGridExample from './components/AgGridExample'
 import ColorContrastUtility from './components/ColorContrastUtility'
 import D3ColorExplorer from './components/D3ColorExplorer'
+import HighchartsColorExperiment from './components/HighchartsColorExperiment'
 import './App.css'
 
 function App() {
@@ -27,6 +28,12 @@ function App() {
           >
             Color Scale
           </NavLink>
+          <NavLink
+            to="/highcharts"
+            className={({ isActive }) => `tab ${isActive ? 'active' : ''}`}
+          >
+            Highcharts Colors
+          </NavLink>
         </nav>
 
         <div className="tab-content">
@@ -35,6 +42,7 @@ function App() {
             <Route path="/contrast" element={<ColorContrastUtility />} />
             <Route path="/grid" element={<AgGridExample />} />
             <Route path="/d3-colors" element={<D3ColorExplorer />} />
+            <Route path="/highcharts" element={<HighchartsColorExperiment />} />
           </Routes>
         </div>
       </div>

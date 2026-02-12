@@ -1,0 +1,254 @@
+.hc-experiment {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.hc-experiment h2 {
+  margin-bottom: 0.25rem;
+}
+
+.hc-description {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.hc-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.hc-control-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.hc-color-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.hc-color-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+}
+
+.hc-color-item input[type='color'] {
+  width: 24px;
+  height: 24px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+}
+
+.hc-color-hex {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.hc-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.hc-remove-btn:hover {
+  color: #ef4444;
+}
+
+.hc-add-color {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.hc-add-color input {
+  width: 80px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.hc-add-color button {
+  padding: 0.3rem 0.75rem;
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.hc-add-color button:hover {
+  background: #5a6fd6;
+}
+
+.hc-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.hc-preset-btn {
+  padding: 0.35rem 0.7rem;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #374151;
+}
+
+.hc-preset-btn:hover {
+  background: #f3f4f6;
+  border-color: #667eea;
+}
+
+.hc-control-group input[type='range'] {
+  width: 100%;
+}
+
+.hc-chart-types {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.hc-type-btn {
+  padding: 0.35rem 0.75rem;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  color: #374151;
+}
+
+.hc-type-btn.active {
+  background: #667eea;
+  color: #fff;
+  border-color: #667eea;
+}
+
+.hc-type-btn:hover:not(.active) {
+  background: #f3f4f6;
+}
+
+.hc-chart-container {
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.hc-assignments h3 {
+  margin-bottom: 0.75rem;
+}
+
+.hc-assignment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.hc-assignment-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.hc-assignment-card.duplicate {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.hc-assignment-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.hc-assignment-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.hc-assignment-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #111827;
+}
+
+.hc-assignment-detail {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.hc-assignment-warn {
+  font-size: 0.7rem;
+  color: #d97706;
+  font-weight: 600;
+}
+
+.hc-info {
+  padding: 1.25rem;
+  background: #f0f4ff;
+  border-radius: 8px;
+  border: 1px solid #dbeafe;
+}
+
+.hc-info h3 {
+  margin-bottom: 0.5rem;
+  color: #1e40af;
+}
+
+.hc-info ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.hc-info li {
+  margin-bottom: 0.4rem;
+  line-height: 1.5;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.hc-info code {
+  background: #e0e7ff;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
