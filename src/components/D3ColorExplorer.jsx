@@ -1,6 +1,32 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { generateColorScale, isValidColor } from '../utils/generateColorScale'
 import './D3ColorExplorer.css'
+
+const STORAGE_KEY = 'colorExplorer_editedPalette'
+const CUSTOM_PALETTES_KEY = 'colorExplorer_customPalettes'
+
+function loadSavedState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    return saved ? JSON.parse(saved) : null
+  } catch {
+    return null
+  }
+}
+
+function loadCustomPalettes() {
+  try {
+    const saved = localStorage.getItem(CUSTOM_PALETTES_KEY)
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false
+  return a.every((v, i) => v.toLowerCase() === b[i].toLowerCase())
+}
 
 // Preset color palettes
 const presetPalettes = {
@@ -48,18 +74,62 @@ const presetPalettes = {
 }
 
 const D3ColorExplorer = () => {
-  const [inputColors, setInputColors] = useState(presetPalettes['Sunset'][6])
-  const [inputColorTexts, setInputColorTexts] = useState(presetPalettes['Sunset'][6])
-  const [totalColors, setTotalColors] = useState(10)
-  const [interpolation, setInterpolation] = useState('RGB')
-  const [backgroundColor, setBackgroundColor] = useState('#ffffff')
-  const [backgroundColorInput, setBackgroundColorInput] = useState('#ffffff')
-  const [sampleText, setSampleText] = useState('Sample')
+  const saved = useMemo(() => loadSavedState(), [])
+  const loadedCustomPalettes = useMemo(() => loadCustomPalettes(), [])
+  const [inputColors, setInputColors] = useState(saved?.inputColors || presetPalettes['Sunset'][6])
+  const [inputColorTexts, setInputColorTexts] = useState(saved?.inputColors || presetPalettes['Sunset'][6])
+  const [totalColors, setTotalColors] = useState(saved?.totalColors || 10)
+  const [interpolation, setInterpolation] = useState(saved?.interpolation || 'RGB')
+  const [backgroundColor, setBackgroundColor] = useState(saved?.backgroundColor || '#ffffff')
+  const [backgroundColorInput, setBackgroundColorInput] = useState(saved?.backgroundColor || '#ffffff')
+  const [sampleText, setSampleText] = useState(saved?.sampleText || 'Sample')
+  const [activePalette, setActivePalette] = useState(saved?.activePalette || { name: 'Sunset', count: 6 })
+  const [customPalettes, setCustomPalettes] = useState(loadedCustomPalettes)
+  const [showSavePaletteForm, setShowSavePaletteForm] = useState(false)
+  const [savePaletteName, setSavePaletteName] = useState('')
+  const [savePaletteError, setSavePaletteError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(null)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CUSTOM_PALETTES_KEY, JSON.stringify(customPalettes))
+    } catch { /* storage full or unavailable */ }
+  }, [customPalettes])
+
+  const isEdited = useMemo(() => {
+    const { name, count, custom } = activePalette
+    if (custom) {
+      const cp = customPalettes.find(p => p.name === name)
+      if (!cp) return true
+      return !arraysEqual(inputColors, cp.colors)
+    }
+    const original = presetPalettes[name]?.[count]
+    if (!original) return true
+    return !arraysEqual(inputColors, original)
+  }, [inputColors, activePalette, customPalettes])
+
+  const saveState = useCallback(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        inputColors,
+        totalColors,
+        interpolation,
+        backgroundColor,
+        sampleText,
+        activePalette,
+      }))
+    } catch { /* storage full or unavailable */ }
+  }, [inputColors, totalColors, interpolation, backgroundColor, sampleText, activePalette])
+
+  useEffect(() => {
+    saveState()
+  }, [saveState])
 
   const applyPreset = (paletteName, colorCount) => {
     const colors = presetPalettes[paletteName][colorCount]
     setInputColors([...colors])
     setInputColorTexts([...colors])
+    setActivePalette({ name: paletteName, count: colorCount })
     if (totalColors < colors.length) {
       setTotalColors(colors.length)
     }
@@ -78,6 +148,49 @@ const D3ColorExplorer = () => {
     if (inputColors.length > 2) {
       setInputColors(inputColors.filter((_, i) => i !== index))
       setInputColorTexts(inputColorTexts.filter((_, i) => i !== index))
+    }
+  }
+
+  const saveAsCustomPalette = () => {
+    const name = savePaletteName.trim()
+    if (!name) {
+      setSavePaletteError('Name is required')
+      return
+    }
+    if (customPalettes.some(p => p.name === name)) {
+      setSavePaletteError('A custom palette with this name already exists')
+      return
+    }
+    const newPalette = { name, colors: [...inputColors] }
+    setCustomPalettes([...customPalettes, newPalette])
+    setActivePalette({ name, count: inputColors.length, custom: true })
+    setShowSavePaletteForm(false)
+    setSavePaletteName('')
+    setSavePaletteError('')
+  }
+
+  const updateCustomPalette = () => {
+    const name = activePalette.name
+    setCustomPalettes(customPalettes.map(p =>
+      p.name === name ? { ...p, colors: [...inputColors] } : p
+    ))
+    setActivePalette({ name, count: inputColors.length, custom: true })
+  }
+
+  const deleteCustomPalette = (name) => {
+    setCustomPalettes(customPalettes.filter(p => p.name !== name))
+    if (activePalette.custom && activePalette.name === name) {
+      setActivePalette({ name: 'Sunset', count: 6 })
+    }
+  }
+
+  const applyCustomPalette = (palette) => {
+    const colors = [...palette.colors]
+    setInputColors(colors)
+    setInputColorTexts(colors)
+    setActivePalette({ name: palette.name, count: colors.length, custom: true })
+    if (totalColors < colors.length) {
+      setTotalColors(colors.length)
     }
   }
 
@@ -129,11 +242,20 @@ const D3ColorExplorer = () => {
       </div>
 
       <div className="preset-palettes">
-        <h3>Preset Palettes</h3>
+        <h3>Palettes</h3>
+        <div className="storage-notice">
+          <span className="storage-notice-icon">i</span>
+          Custom palettes and edits are saved in this browser only.
+        </div>
         <div className="palette-grid">
           {Object.entries(presetPalettes).map(([name, variants]) => (
-            <div key={name} className="palette-card">
-              <div className="palette-name">{name}</div>
+            <div key={name} className={`palette-card ${activePalette.name === name && !activePalette.custom ? 'active' : ''}`}>
+              <div className="palette-name">
+                {name}
+                {activePalette.name === name && !activePalette.custom && isEdited && (
+                  <span className="edited-badge">Edited</span>
+                )}
+              </div>
               <div className="palette-preview">
                 {variants[6].map((color, i) => (
                   <div key={i} className="preview-color" style={{ backgroundColor: color }} />
@@ -145,12 +267,75 @@ const D3ColorExplorer = () => {
               </div>
             </div>
           ))}
+          {customPalettes.map((palette) => (
+            <div key={`custom-${palette.name}`} className={`palette-card custom ${activePalette.custom && activePalette.name === palette.name ? 'active' : ''}`}>
+              <div className="palette-name">
+                {palette.name}
+                <span className="custom-badge">Custom</span>
+                {activePalette.custom && activePalette.name === palette.name && isEdited && (
+                  <span className="edited-badge">Edited</span>
+                )}
+              </div>
+              <div className="palette-preview">
+                {palette.colors.map((color, i) => (
+                  <div key={i} className="preview-color" style={{ backgroundColor: color }} />
+                ))}
+              </div>
+              <div className="palette-actions">
+                <button onClick={() => applyCustomPalette(palette)}>Apply</button>
+                {confirmingDelete === palette.name ? (
+                  <>
+                    <button className="delete-confirm-btn" onClick={() => { deleteCustomPalette(palette.name); setConfirmingDelete(null) }}>Confirm</button>
+                    <button className="delete-cancel-btn" onClick={() => setConfirmingDelete(null)}>Cancel</button>
+                  </>
+                ) : (
+                  <button className="delete-palette-btn" onClick={() => setConfirmingDelete(palette.name)}>Delete</button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="explorer-controls">
         <div className="control-section">
-          <h3>Input Colors</h3>
+          <div className="section-header">
+            <h3>Input Colors</h3>
+            {isEdited && (
+              <div className="section-header-actions">
+                <button
+                  className="reset-btn"
+                  onClick={() => {
+                    if (activePalette.custom) {
+                      applyCustomPalette(customPalettes.find(p => p.name === activePalette.name))
+                    } else {
+                      applyPreset(activePalette.name, activePalette.count)
+                    }
+                  }}
+                  title="Reset to original palette"
+                >
+                  Reset
+                </button>
+                {activePalette.custom ? (
+                  <button
+                    className="update-palette-btn"
+                    onClick={updateCustomPalette}
+                    title="Save changes to this custom palette"
+                  >
+                    Save
+                  </button>
+                ) : (
+                  <button
+                    className="save-palette-btn"
+                    onClick={() => { setShowSavePaletteForm(true); setSavePaletteError('') }}
+                    title="Save as a new custom palette"
+                  >
+                    Save as New Palette
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <p className="section-desc">Add colors to define your gradient stops (minimum 2)</p>
           <div className="color-inputs">
             {inputColors.map((color, index) => (
@@ -180,6 +365,21 @@ const D3ColorExplorer = () => {
           <button onClick={addColor} className="add-color-btn">
             + Add Color
           </button>
+          {showSavePaletteForm && (
+            <div className="save-palette-form">
+              <input
+                type="text"
+                value={savePaletteName}
+                onChange={(e) => { setSavePaletteName(e.target.value); setSavePaletteError('') }}
+                placeholder="Palette name"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') saveAsCustomPalette(); if (e.key === 'Escape') { setShowSavePaletteForm(false); setSavePaletteName(''); setSavePaletteError('') } }}
+              />
+              <button onClick={saveAsCustomPalette} className="save-palette-confirm">Save</button>
+              <button onClick={() => { setShowSavePaletteForm(false); setSavePaletteName(''); setSavePaletteError('') }} className="save-palette-cancel">Cancel</button>
+              {savePaletteError && <span className="save-palette-error">{savePaletteError}</span>}
+            </div>
+          )}
         </div>
 
         <div className="control-section">
