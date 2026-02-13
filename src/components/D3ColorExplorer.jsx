@@ -66,8 +66,12 @@ const D3ColorExplorer = () => {
   }
 
   const addColor = () => {
+    const newLength = inputColors.length + 1
     setInputColors([...inputColors, '#888888'])
     setInputColorTexts([...inputColorTexts, '#888888'])
+    if (totalColors < newLength) {
+      setTotalColors(newLength)
+    }
   }
 
   const removeColor = (index) => {
@@ -183,13 +187,32 @@ const D3ColorExplorer = () => {
           <div className="settings-row">
             <label>
               Total Colors to Generate:
-              <input
-                type="number"
-                min="2"
-                max="100"
-                value={totalColors}
-                onChange={(e) => setTotalColors(Math.max(2, parseInt(e.target.value) || 2))}
-              />
+              <div className="stepper-input">
+                <button
+                  className="stepper-btn"
+                  onClick={() => setTotalColors(Math.max(inputColors.length, totalColors - 1))}
+                  disabled={totalColors <= inputColors.length}
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min={inputColors.length}
+                  max="100"
+                  value={totalColors}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || inputColors.length
+                    setTotalColors(Math.min(100, Math.max(inputColors.length, val)))
+                  }}
+                />
+                <button
+                  className="stepper-btn"
+                  onClick={() => setTotalColors(Math.min(100, totalColors + 1))}
+                  disabled={totalColors >= 100}
+                >
+                  +
+                </button>
+              </div>
             </label>
           </div>
           <div className="settings-row">
